@@ -1,29 +1,19 @@
 export const ToyReact = {
-  createElement() {
-    debugger;
-
-    /* Args for MyComponent
-    Arguments(2) [ƒ, {…}, callee: (...), Symbol(Symbol.iterator): ƒ]
-    0: ƒ MyComponent()
-    1: {name: "a"}
-    callee: (...)
-    length: 2
-    Symbol(Symbol.iterator): ƒ values()
-    get callee: ƒ ()
-    set callee: ƒ ()
-    __proto__: Object
-    */
-
-    /* Args for div
-    Arguments(2) ["div", {…}, callee: (...), Symbol(Symbol.iterator): ƒ]
-    0: "div"
-    1: {name: "a"}
-    callee: (...)
-    length: 2
-    Symbol(Symbol.iterator): ƒ values()
-    get callee: ƒ ()
-    set callee: ƒ ()
-    __proto__: Object
-    */
+  // the paramenters sent to createElement
+  // 1. the element/tag/component
+  // 2. the attributes of the element
+  // 3. various children
+  createElement(type, attributes, ...children) {
+    const element = document.createElement(type);
+    for (const name in attributes) {
+      element.setAttribute(name, attributes[name]);
+    }
+    for (let child of children) {
+      if (typeof child === "string") {
+        child = document.createTextNode(child);
+      }
+      element.appendChild(child);
+    }
+    return element;
   },
 };
