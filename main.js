@@ -1,28 +1,17 @@
-import { ToyReact } from "./ToyReact";
+import { ToyReact, Component } from "./ToyReact";
 
-const a = (
-  <div name="a">
-    <span>Hello</span>
-    <span>World</span>
-    <span>!!!!!</span>
-  </div>
-);
-
-// every tag will be translated to createElement(...), so we need to make createElement return something
+class MyComponent extends Component {
+  render() {
+    return (
+      <div>
+        <span>Hello</span>
+        <span>World</span>
+      </div>
+    );
+  }
+}
+const a = <MyComponent name="a"></MyComponent>;
 
 console.log(a);
-document.body.appendChild(a);
 
-// // import { ToyReact } from "./ToyReact";
-// var a = ToyReact.createElement(
-//   "div",
-//   {
-//     name: "a",
-//   },
-//   ToyReact.createElement("span", null, "Hello"),
-//   ToyReact.createElement("span", null, "World"),
-//   ToyReact.createElement("span", null, "!!!!!")
-// );
-
-// console.log(a);
-// document.body.appendChild(a);
+ToyReact.render(a, document.body);
