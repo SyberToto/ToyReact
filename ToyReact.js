@@ -31,6 +31,15 @@ class TextWrapper {
 export class Component {
   // we need the component to have same dom element API
   // to set attribute and
+  constructor() {
+    this.children = [];
+  }
+
+  appendChild(vchild) {
+    // vchild is virtual node/component
+    this.children.push(vchild);
+  }
+
   setAttribute(name, value) {
     this[name] = value;
   }
@@ -57,12 +66,29 @@ export const ToyReact = {
     for (const name in attributes) {
       element.setAttribute(name, attributes[name]);
     }
-    for (let child of children) {
-      if (typeof child === "string") {
-        child = new TextWrapper(child);
+
+    // {this.children} in JSX will be treated as a single child
+    // element.append(child: Array) -> (child: Array).mountTo cannot work
+    const insertChildren = (children) => {
+      for (let child of children) {
+        if (typeof child === "object" && child instanceof Array) {
+          insertChildren(child);
+        } else {
+          if (
+            !(child instanceof Component) &&
+            !(child instanceof ElementWrapper) &&
+            !(child instanceof TextWrapper)
+          ) {
+            child = String(child);
+          }
+          if (typeof child === "string") {
+            child = new TextWrapper(child);
+          }
+          element.appendChild(child);
+        }
       }
-      element.appendChild(child);
-    }
+    };
+    insertChildren(children);
     return element;
   },
 
