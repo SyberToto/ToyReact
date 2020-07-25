@@ -34,6 +34,7 @@ class ElementWrapper {
 
   mountTo(range) {
     // parent is true dom element
+    this.range = range;
     range.deleteContents();
     const element = document.createElement(this.type);
 
@@ -68,9 +69,13 @@ class ElementWrapper {
 class TextWrapper {
   constructor(type) {
     this.root = document.createTextNode(type);
+    this.type = "#text";
+    this.children = [];
+    this.props = Object.create(null);
   }
 
   mountTo(range) {
+    this.range = range;
     range.deleteContents();
     range.insertNode(this.root);
   }
@@ -83,7 +88,9 @@ export class Component {
     this.children = [];
     this.props = Object.create(null); // this doesn't contain default function such as toString()
   }
-
+  get type() {
+    return this.constructor.name;
+  }
   appendChild(vchild) {
     // vchild is virtual node/component
     this.children.push(vchild);
@@ -103,15 +110,83 @@ export class Component {
   }
 
   update() {
+    // hack for range
     const placeHolder = document.createComment("placeHolder");
     let range = document.createRange();
     range.setStart(this.range.endContainer, this.range.endOffset);
     range.setEnd(this.range.endContainer, this.range.endOffset);
     range.insertNode(placeHolder);
+    // hack for range
 
     this.range.deleteContents();
+
     const vdom = this.render();
-    vdom.mountTo(this.range);
+    if (this.vdom) {
+      const isSameNode = (node1, node2) => {
+        if (node1.type !== node2.type) {
+          return false;
+        }
+        for (const name in node1.props) {
+          if (node1.props[name] !== node2.props[name]) {
+            if (
+              typeof node1.props[name] === "function" &&
+              typeof node2.props[name] === "function" &&
+              node1.props[name].toString() === node2.props[name].toString()
+            ) {
+              continue;
+            }
+            if (
+              typeof node1.props[name] === "object" &&
+              typeof node2.props[name] === "object" &&
+              JSON.stringify(node1.props[name]) ===
+                JSON.stringify(node2.props[name])
+            ) {
+              continue;
+            }
+            return false;
+          }
+        }
+        if (
+          Object.keys(node1.props).length !== Object.keys(node2.props).length
+        ) {
+          return false;
+        }
+        return true;
+      };
+
+      const isSameTree = (node1, node2) => {
+        if (!isSameNode(node1, node2)) {
+          return false;
+        }
+        if (node1.children.length !== node2.children.length) {
+          return false;
+        }
+        for (let i = 0; i < node1.children.length; i++) {
+          if (!isSameTree(node1.children[i], node2.children[i])) {
+            return false;
+          }
+        }
+        return true;
+      };
+
+      const replace = (newTree, oldTree) => {
+        if (isSameTree(newTree, oldTree)) {
+          return;
+        }
+        if (!isSameNode(newTree, oldTree)) {
+          newTree.mountTo(oldTree.range);
+        } else {
+          for (let i = 0; i < newTree.children.length; i++) {
+            replace(newTree.children[i], oldTree.children[i]);
+          }
+        }
+      };
+
+      replace(vdom, this.vdom);
+    } else {
+      vdom.mountTo(this.range);
+    }
+    this.vdom = vdom;
   }
 
   setState(state) {
