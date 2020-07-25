@@ -17,12 +17,21 @@ class ElementWrapper {
 
   appendChild(vchild) {
     // vchild is virtual node/component
-    vchild.mountTo(this.root);
+    let range = document.createRange();
+    if (this.root.children.length) {
+      range.setStartAfter(this.root.lastChild);
+      range.setEndAfter(this.root.lastChild);
+    } else {
+      range.setStart(this.root, 0);
+      range.setEnd(this.root, 0);
+    }
+    vchild.mountTo(range);
   }
 
-  mountTo(parent) {
+  mountTo(range) {
     // parent is true dom element
-    parent.appendChild(this.root);
+    range.deleteContents();
+    range.insertNode(this.root);
   }
 }
 
@@ -31,8 +40,9 @@ class TextWrapper {
     this.root = document.createTextNode(type);
   }
 
-  mountTo(parent) {
-    parent.appendChild(this.root);
+  mountTo(range) {
+    range.deleteContents();
+    range.insertNode(this.root);
   }
 }
 
@@ -53,13 +63,25 @@ export class Component {
     if (name.match(/^on([\s\S]+)$/)) {
       console.log(RegExp.$1);
     }
-    this[name] = value;
     this.props[name] = value;
+    this[name] = value;
   }
 
-  mountTo(parent) {
+  mountTo(range) {
+    this.range = range;
+    this.update();
+  }
+
+  update() {
+    const placeHolder = document.createComment("placeHolder");
+    let range = document.createRange();
+    range.setStart(this.range.endContainer, this.range.endOffset);
+    range.setEnd(this.range.endContainer, this.range.endOffset);
+    range.insertNode(placeHolder);
+
+    this.range.deleteContents();
     const vdom = this.render();
-    vdom.mountTo(parent);
+    vdom.mountTo(this.range);
   }
 
   setState(state) {
@@ -80,6 +102,7 @@ export class Component {
     }
     merge(this.state, state);
     console.log(this.state);
+    this.update();
   }
 }
 
@@ -110,7 +133,7 @@ export const ToyReact = {
           if (
             !(child instanceof Component) &&
             !(child instanceof ElementWrapper) &&
-            !(child instanceof TextWrapper)
+            !(child instanceof TextWrapper) // always true?
           ) {
             child = String(child);
           }
@@ -127,6 +150,14 @@ export const ToyReact = {
 
   render(vdom, element) {
     // vdom is either a dom element or a component here
-    vdom.mountTo(element);
+    let range = document.createRange();
+    if (element.children.length) {
+      range.setStartAfter(element.lastChild);
+      range.setEndAfter(element.lastChild);
+    } else {
+      range.setStart(element, 0);
+      range.setEnd(element, 0);
+    }
+    vdom.mountTo(range);
   },
 };
