@@ -4,6 +4,14 @@ class ElementWrapper {
   }
 
   setAttribute(name, value) {
+    if (name.match(/^on([\s\S]+)$/)) {
+      console.log(RegExp.$1);
+      const eventName = RegExp.$1.replace(/^[\s\S]/, (s) => s.toLowerCase()); // Click -> click
+      this.root.addEventListener(eventName, value);
+    }
+    if (name === "className") {
+      name = "class";
+    }
     this.root.setAttribute(name, value);
   }
 
@@ -42,6 +50,9 @@ export class Component {
   }
 
   setAttribute(name, value) {
+    if (name.match(/^on([\s\S]+)$/)) {
+      console.log(RegExp.$1);
+    }
     this[name] = value;
     this.props[name] = value;
   }
