@@ -1,37 +1,67 @@
 class ElementWrapper {
   constructor(type) {
-    this.root = document.createElement(type);
+    this.type = type;
+    this.props = Object.create(null);
+    this.children = [];
   }
 
   setAttribute(name, value) {
-    if (name.match(/^on([\s\S]+)$/)) {
-      console.log(RegExp.$1);
-      const eventName = RegExp.$1.replace(/^[\s\S]/, (s) => s.toLowerCase()); // Click -> click
-      this.root.addEventListener(eventName, value);
-    }
-    if (name === "className") {
-      name = "class";
-    }
-    this.root.setAttribute(name, value);
+    // if (name.match(/^on([\s\S]+)$/)) {
+    //   console.log(RegExp.$1);
+    //   const eventName = RegExp.$1.replace(/^[\s\S]/, (s) => s.toLowerCase()); // Click -> click
+    //   this.root.addEventListener(eventName, value);
+    // }
+    // if (name === "className") {
+    //   name = "class";
+    // }
+    // this.root.setAttribute(name, value);
+    this.props[name] = value;
   }
 
   appendChild(vchild) {
-    // vchild is virtual node/component
-    let range = document.createRange();
-    if (this.root.children.length) {
-      range.setStartAfter(this.root.lastChild);
-      range.setEndAfter(this.root.lastChild);
-    } else {
-      range.setStart(this.root, 0);
-      range.setEnd(this.root, 0);
-    }
-    vchild.mountTo(range);
+    // // vchild is virtual node/component
+    // let range = document.createRange();
+    // if (this.root.children.length) {
+    //   range.setStartAfter(this.root.lastChild);
+    //   range.setEndAfter(this.root.lastChild);
+    // } else {
+    //   range.setStart(this.root, 0);
+    //   range.setEnd(this.root, 0);
+    // }
+    // vchild.mountTo(range);
+    this.children.push(vchild);
   }
 
   mountTo(range) {
     // parent is true dom element
     range.deleteContents();
-    range.insertNode(this.root);
+    const element = document.createElement(this.type);
+
+    for (const name in this.props) {
+      const value = this.props[name];
+      if (name.match(/^on([\s\S]+)$/)) {
+        const eventName = RegExp.$1.replace(/^[\s\S]/, (s) => s.toLowerCase()); // Click -> click
+        element.addEventListener(eventName, value);
+      }
+      if (name === "className") {
+        element.setAttribute("class", value);
+      }
+      element.setAttribute(name, value);
+    }
+
+    for (const child of this.children) {
+      let range = document.createRange();
+      if (element.children.length) {
+        range.setStartAfter(element.lastChild);
+        range.setEndAfter(element.lastChild);
+      } else {
+        range.setStart(element, 0);
+        range.setEnd(element, 0);
+      }
+      child.mountTo(range);
+    }
+
+    range.insertNode(element);
   }
 }
 
