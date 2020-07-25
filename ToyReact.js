@@ -33,6 +33,7 @@ export class Component {
   // to set attribute and
   constructor() {
     this.children = [];
+    this.props = Object.create(null); // this doesn't contain default function such as toString()
   }
 
   appendChild(vchild) {
@@ -42,6 +43,7 @@ export class Component {
 
   setAttribute(name, value) {
     this[name] = value;
+    this.props[name] = value;
   }
 
   mountTo(parent) {
