@@ -61,6 +61,26 @@ export class Component {
     const vdom = this.render();
     vdom.mountTo(parent);
   }
+
+  setState(state) {
+    let merge = (oldState, newState) => {
+      for (const p in newState) {
+        if (typeof newState[p] === "object") {
+          if (typeof oldState[p] !== "object") {
+            oldState[p] = {};
+          }
+          merge(oldState[p], newState[p]);
+        } else {
+          oldState[p] = newState[p];
+        }
+      }
+    };
+    if (!this.state && state) {
+      this.state = {};
+    }
+    merge(this.state, state);
+    console.log(this.state);
+  }
 }
 
 export const ToyReact = {
